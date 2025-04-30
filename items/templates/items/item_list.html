@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sortable Items</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <h1>Sortable List</h1>
+    <ul id="item-list">
+        {% for item in items %}
+            <li data-id="{{ item.id }}">{{ item.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        new Sortable(document.getElementById('item-list'), {
+            animation: 150,
+            onEnd: function (evt) {
+                // You'll send a POST request to save the new order later
+                console.log('Moved item');
+            }
+        });
+    </script>
+</body>
+</html>
