@@ -1,25 +1,53 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Sortable Items</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Sortable List</h1>
+
     <ul id="item-list">
-        {% for item in items %}
-            <li data-id="{{ item.id }}">{{ item.name }}</li>
-        {% endfor %}
+      {% for item in items %}
+      <li data-id="{{ item.id }}">{{ item.name }}</li>
+      {% endfor %}
     </ul>
 
     <script>
-        new Sortable(document.getElementById('item-list'), {
-            animation: 150,
-            onEnd: function (evt) {
-                // You'll send a POST request to save the new order later
-                console.log('Moved item');
-            }
-        });
+      // 1. Get the UL element (the sortable list)
+      const sortableList = document.getElementById("item-list");
+
+      // 2. Create a new Sortable instance and pass it the list
+      new Sortable(sortableList, {
+        animation: 150, // animation duration when sorting
+
+        onEnd: function (evt) {
+          // 3. When an item is dropped, this function is triggered
+
+          // 4. Get all list items (<li>) after sorting
+          const items = sortableList.querySelectorAll("li");
+
+          // 5. Create an array of IDs based on their new order
+          const order = Array.from(items).map((item) => item.dataset.id);
+
+          // 6. Send the new order to the backend using fetch()
+          fetch("/reorder/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json", // We're sending JSON data
+              // Note: No CSRF token here yet (we'll fix this later)
+            },
+            body: JSON.stringify({ order: order }), // Convert array to JSON
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Server response:", data); // Optional: See if server responded correctly
+            })
+            .catch((error) => {
+              console.error("Error saving new order:", error);
+            });
+        },
+      });
     </script>
-</body>
+  </body>
 </html>
