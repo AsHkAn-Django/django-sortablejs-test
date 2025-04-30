@@ -10,3 +10,13 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        # Save the object to assign it an ID if it's new
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        # If it's new and no order is set, set order = ID and save again
+        if is_new and self.order is None:
+            self.order = self.pk
+            super().save(update_fields=['order'])  # Only update the order field
