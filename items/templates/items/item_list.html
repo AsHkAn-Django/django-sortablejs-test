@@ -7,6 +7,12 @@
   <body>
     <h1>Sortable List</h1>
 
+    <!-- Django's template tag for CSRF token -->
+    {% csrf_token %}
+
+    <!-- Hidden input to get the CSRF token -->
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}" />
+
     <ul id="item-list">
       {% for item in items %}
       <li data-id="{{ item.id }}">{{ item.name }}</li>
@@ -14,37 +20,39 @@
     </ul>
 
     <script>
-      // 1. Get the UL element (the sortable list)
+      // 1. Select the sortable list by ID
       const sortableList = document.getElementById("item-list");
 
-      // 2. Create a new Sortable instance and pass it the list
+      // 2. Select the hidden input that holds the CSRF token
+      const csrfToken = document.getElementById("csrf-token").value;
+
+      // 3. Initialize SortableJS on the list
       new Sortable(sortableList, {
-        animation: 150, // animation duration when sorting
+        animation: 150, // Smooth drag animation
 
-        onEnd: function (evt) {
-          // 3. When an item is dropped, this function is triggered
-
-          // 4. Get all list items (<li>) after sorting
+        // 4. Function triggered when the user finishes dragging an item
+        onEnd: function () {
+          // 5. Get all the list items after they’ve been reordered
           const items = sortableList.querySelectorAll("li");
 
-          // 5. Create an array of IDs based on their new order
+          // 6. Map over them to create an array of their data-id attributes (as strings)
           const order = Array.from(items).map((item) => item.dataset.id);
 
-          // 6. Send the new order to the backend using fetch()
+          // 7. Send the new order to the Django backend using fetch()
           fetch("/reorder/", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json", // We're sending JSON data
-              // Note: No CSRF token here yet (we'll fix this later)
+              "Content-Type": "application/json", // Tell Django we're sending JSON
+              "X-CSRFToken": csrfToken, // Include the CSRF token securely!
             },
-            body: JSON.stringify({ order: order }), // Convert array to JSON
+            body: JSON.stringify({ order: order }), // Send the new order list
           })
-            .then((response) => response.json())
+            .then((response) => response.json()) // Convert response to JSON
             .then((data) => {
-              console.log("Server response:", data); // Optional: See if server responded correctly
+              console.log("Server response:", data); // Log the server response
             })
             .catch((error) => {
-              console.error("Error saving new order:", error);
+              console.error("Error saving new order:", error); // Log any errors
             });
         },
       });
